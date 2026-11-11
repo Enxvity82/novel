@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Origins of a Lone Warrior</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* Fixed dark palette: a title screen and a night-reading page look the same in light and dark mode. */
+:root{
+  --bg-in:#152117; --bg-mid:#0B180F; --bg-out:#06120D;
+  --title:#D8DFD8; --title-hi:#E8EFE8; --sub:#B9C3B8; --dim:#7F8B80; --body:#CBD4CB;
+  --display:'Cinzel Decorative','Cinzel','Trajan Pro',Georgia,serif;
+  --text:'Cormorant Garamond','Palatino Linotype',Georgia,serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;height:100%;overflow:hidden;color:var(--sub);font-family:var(--text);
+  background:radial-gradient(ellipse 75% 80% at 50% 48%,var(--bg-in) 0%,var(--bg-mid) 58%,var(--bg-out) 100%) #06120D}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg-out);z-index:10}
+a:focus-visible{outline:1px solid var(--dim);outline-offset:3px}
+
+canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0}
+
+/* Title screen */
+.stage{position:relative;height:100%;display:flex;overflow-y:auto}
+.col{position:relative;z-index:1;margin:auto;display:flex;flex-direction:column;align-items:center;text-align:center;padding:2rem 1.5rem}
+h1{margin:0;font-family:var(--display);font-weight:400;text-transform:uppercase;color:var(--title);
+  text-shadow:0 0 28px rgba(216,223,216,.14);animation:rise 2.6s ease-out both}
+h1 .pre{display:block;font-size:clamp(.95rem,2.6vw,1.5rem);letter-spacing:.42em;margin-right:-.42em;color:var(--sub);margin-bottom:.9rem}
+h1 .main{display:block;font-size:clamp(2.1rem,7.4vw,5rem);letter-spacing:.08em;margin-right:-.08em;line-height:1.05}
+@keyframes rise{from{opacity:0;filter:blur(7px);letter-spacing:.2em}to{opacity:1;filter:blur(0)}}
+
+.prompt{margin:3.6rem 0 0;max-height:3rem;overflow:hidden;font-size:clamp(1rem,2.2vw,1.2rem);letter-spacing:.04em;color:var(--sub);
+  transition:opacity .5s ease,max-height 1.2s ease,margin-top 1.2s ease}
+.prompt span{display:block;padding-left:.04em;opacity:0;animation:appear 1.6s ease 2.4s forwards,pulse 3.6s ease-in-out 4s infinite}
+@keyframes appear{to{opacity:.9}}
+@keyframes pulse{0%,100%{opacity:.9}50%{opacity:.35}}
+.menu-open .prompt{opacity:0;max-height:0;margin-top:0}
+.slot{width:100%;max-height:0;margin-top:0;overflow:hidden;transition:max-height 1.2s ease,margin-top 1.2s ease}
+.menu-open .slot{max-height:44rem;margin-top:3rem}
+.menu{list-style:none;margin:0 auto;padding:.25rem 0;max-width:40rem;text-align:center;opacity:0;visibility:hidden;transition:opacity .4s ease,visibility 0s linear .4s}
+.menu-open .menu{opacity:1;visibility:visible;transition:opacity .9s ease .5s}
+.menu a{position:relative;display:block;padding:.55rem 2.4rem;text-wrap:balance;font-size:clamp(1.1rem,2.4vw,1.4rem);letter-spacing:.05em;line-height:1.3;
+  color:var(--sub);text-decoration:none;transition:color .25s ease}
+.menu a::before,.menu a::after{content:"\2013";position:absolute;top:50%;transform:translateY(-50%);opacity:0;transition:opacity .25s ease}
+.menu a::before{left:.8rem}
+.menu a::after{right:.8rem}
+.menu a:hover,.menu a.on,.menu a:focus-visible{color:var(--title-hi)}
+.menu a:hover::before,.menu a:hover::after,.menu a.on::before,.menu a.on::after,
+.menu a:focus-visible::before,.menu a:focus-visible::after{opacity:.8}
+
+/* Reader */
+.reader{display:none;position:fixed;inset:0;z-index:2;overflow-y:auto;outline:none;
+  padding:calc(1.25rem + env(safe-area-inset-top,0px)) 1.5rem calc(3rem + env(safe-area-inset-bottom,0px));
+  animation:fade .9s ease both}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.reading .reader{display:block}
+.reading .stage{display:none}
+.reader-in{max-width:38rem;min-height:100%;margin:0 auto;display:flex;flex-direction:column;align-items:center}
+.back{display:inline-block;padding:.55rem 1.6rem;border:1px solid rgba(185,195,184,.3);border-radius:2px;color:var(--sub);text-decoration:none;font-size:1.1rem;letter-spacing:.08em;transition:color .25s,border-color .25s}
+.back:hover,.back:focus-visible{color:var(--title-hi);border-color:rgba(232,239,232,.55)}
+.chead{text-align:center;margin:4rem 0 3.5rem}
+.cnum{margin:0 0 1rem;font-size:1.1rem;letter-spacing:.3em;margin-right:-.3em;color:var(--sub)}
+.ctitle{margin:0;font-family:var(--display);font-weight:400;text-transform:uppercase;font-size:clamp(1.4rem,4.2vw,2.3rem);
+  letter-spacing:.06em;line-height:1.3;color:var(--title);text-shadow:0 0 24px rgba(216,223,216,.12)}
+.prose{flex:1;width:100%;font-size:clamp(1.2rem,2.3vw,1.4rem);line-height:1.25;color:var(--body)}
+.prose p{margin:0 0 .67em;white-space:pre-wrap;tab-size:3em}
+.prose p.in{text-indent:3em}
+.prose p.c{text-align:center}
+.prose p.r{text-align:right}
+.prose p.j{text-align:justify}
+.prose b{font-weight:700}
+.prose i{font-style:italic}
+.prose .brk{text-align:center;color:var(--dim);letter-spacing:.5em;margin:2rem 0}
+.prose em{font-style:italic;color:var(--title-hi)}
+.prose strong{font-weight:700;color:var(--title-hi)}
+.pager{display:flex;flex-wrap:wrap;gap:1rem;width:100%;margin-top:3rem}
+.pager a{display:block;flex:1 1 15rem;min-width:0;overflow-wrap:anywhere;padding:.9rem 1.2rem;text-align:center;border:1px solid rgba(185,195,184,.3);border-radius:2px;color:var(--sub);text-decoration:none;font-size:1.1rem;line-height:1.35;transition:color .25s,border-color .25s}
+.pager a small{display:block;margin-bottom:.25rem;font-size:.95rem;letter-spacing:.04em;color:var(--dim)}
+.pager a:hover,.pager a:focus-visible{color:var(--title-hi);border-color:rgba(232,239,232,.55)}
+.pager .next{margin:0}
+
+@media (prefers-reduced-motion:reduce){
+  h1,.reader{animation:none}
+  .prompt span{animation:none;opacity:.9}
+  .slot,.menu{transition:none}
+}
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+  <div class="col">
+    <h1><span class="pre">Origins of a</span><span class="main">Lone Warrior</span></h1>
+    <p class="prompt"><span>– Press any key to continue –</span></p>
+    <div class="slot"><nav aria-label="Chapters"><ul class="menu" id="menu"></ul></nav></div>
+  </div>
+</div>
+<canvas id="dust" aria-hidden="true"></canvas>
+
+<article class="reader" id="reader" tabindex="-1">
+  <div class="reader-in">
+    <a class="back" href="#chapters">Chapters</a>
+    <header class="chead"><p class="cnum" id="cnum"></p><h2 class="ctitle" id="ctitle"></h2></header>
+    <div class="prose" id="prose"></div>
+    <nav class="pager" id="pager" aria-label="Chapter navigation"></nav>
+  </div>
+</article>
+
+<script>
+/* ============ YOUR NOVEL ============
+   One entry per chapter, in reading order.
+   Paragraphs are separated by a blank line. *word* makes italics, **word** makes bold.
+   A line holding only * * * makes a scene break.
+   Chapters converted from a Word file use html: instead of text:, which keeps the
+   document's paragraph gaps, indents, blank lines, bold and italics as written.
+   Until the real text goes in, each chapter is a blank page. */
+function placeholder(n){
+  return '';
+}
+var CHAPTERS=[
+  {n:0,title:'Humble Beginnings',html:`<p class="in">The sounds of the sea eased me deeper into my slumber, in my vivid dream I saw another ship coming closer into the vicinity of ours. I could hear chanting… “We’re masters of the oceans wide~ custodians of relentless tide~ for the authority we fight~ within this dark a blazing light- Hurrah, hurrah, three cheers for the cause~” Sung by the people onboard the ship.</p>
+<p>I see their ship shooting canon balls directly aimed towards our ship.</p>
+<p class="in">*<i>BOOM-*</i></p>
+<p>Everything suddenly turns pitch black, and I wake up to the voice of-</p>
+<p class="e">&nbsp;</p>
+<p>“Rise and shrine Crew! The shores of Erisia are well within our sights.”</p>
+<p>I wake up to the words of someone familiar to me, I should go down to the ship’s lower deck to look for the voice that called me.</p>
+<p>When I got to the lower deck I see Cap’n Beckham waiting for me. “Feeling caught in the waves this morning, Ali? Yer late for your trainin’! Draw your sword and let’s get a move on.” He says</p>
+<p>“Oh, my apologies Cap’n”, I muttered as he readies the equipment for today’s training.</p>
+<p>Today, he aids me in refining my overall swordsmanship as well as training me to be physically stronger, to prepare for any looming danger that we might come across in the island of Erisia.</p>
+<p>“There ya go mate! Lookin’ sharp already! By raising your attributes, you can increase your <b>Power</b> in order to learn new tricks to help ye along the way.”</p>
+<p>What do you mean by power? I ask</p>
+<p>“Once one improves enough of their physical attributes, their power grows. With each milestone you reach, one can pick up further <b>abilities</b><b>.</b><b>” </b>He remarks.<b> </b><b>“</b>But enough of that, let’s not keep your crewmates waitin’.”</p>
+<p>Very well, Cap’n</p>
+<p>We both went up to the main deck of the ship to meet with the other crewmates.</p>
+<p>“Nothing quite like the smell of the sea, aye? Ye did great in yer training today, Altrius. Ye can take a moment to chat with yer fellow crewmates if ye like, just come back my way when you’ve had enough.”</p>
+<p>I then go to chat with a few of my crewmates.</p>
+<p class="e">&nbsp;</p>
+<p>“Oi’ve got… urgh. Oi need a moment. Oi’ll be fine. Exclaimed by the mate sitting in a corner of the deck.</p>
+<p>What’s wrong, Pete?</p>
+<p>“Th’ waves aren’t kind to me gut, Ali. Gah, ol Frank tried feeding me a mushy stew, but- urgh. Tis not a help. Th’ stew beckons my downfall. Ali.” Pete explains</p>
+<p>You should rest up, go inside the cabins, sitting in a corner like this won’t help your gut.</p>
+<p class="in">*<i>The man gives a weak thumbs-up toward you, clutching his stomach with the other hand*</i></p>
+<p>From the middle of the ship, you hear: “Aye Altrius!”</p>
+<p>I turn around and see another familiar face. “Oh Filigree, what’s up?”</p>
+<p>“Tis great to see you again. Apologies for devastating ye in our last spar, I heard Beckham ramblin’ about it from ‘ere. He said somethin’ about fearin’ for yer ability to live in Etrea with that display.” She says while having this devious smile on her face.</p>
+<p>We just practiced, it’s settled now.</p>
+<p>“Perfect! – oh I see Beckham tryna call for you, you should probably return to him”</p>
+<p>Oh alright, I gotta go then.</p>
+<p class="e">&nbsp;</p>
+<p>I went back to the Captain to see what he wants to tell me this time.</p>
+<p>“Ye get a good enough chinwag out there, then?” Beckham asks.</p>
+<p>Yeah I think so.</p>
+<p>“As I was sayin’ earlier, you’ll have an opportunity to take up new <b>Talents. </b>You may also take up what’re known as <b>Mantras. </b>They’re fragments of the <b>Song </b>that ye can call upon to wield in battle. Ye’ll surely come across them as ye increase your power.”</p>
+<p>As he explained, I understood the basics of chanting mantras. I then try to channel my <b>Ether </b>to my hand and aimed towards the empty sea.</p>
+<p class="in">*<i>Swoosh*</i>, suddenly a burst of wind comes out of my palm.</p>
+<p>“Pwoah! Yer a natural, mate. Seems like all my training is finally paying off eh?”</p>
+<p>What’s Next?</p>
+<p>“Heh, well next up we have my favor-“</p>
+<p>We both suddenly heard the sounds of canons firing and chanting, eerily similar to the one I heard in my dream.</p>
+<p>“No… The Authority couldn’t have… EVERYONE GET BELOW THE DECK, NOW!”</p>
+<p class="in">*<i>BOOM-*</i></p>
+<p>My vision then fades to black. We didn’t have time to do anything. Why didn’t we see the Authority’s ship looming closer and closer to ours? I can feel burns and bruises all over my body. Did the ship get destroyed that quickly? God I can’t even open my eyes to see-. I then lose my consciousness…</p>`},
+  {n:1,title:'Castaway',html:`<p class="in">My new journey with the crew had barely even started and it seemed to have ended before we could even reach the island we travelled days to reach. I thought it would be a smooth sail until those Authority bastards came in and ruined it all. Could we have foreseen the ambush? Hell would I know, I’m not even sure myself if I’m already in the afterlife just waiting for a light to show or if anyone from the crew even survived.</p>
+<p>A light begins to shine bright in front of me, I try to chase it and..</p>
+<p>*<i>Arghhh* </i>I wake up in a bed in a room I don’t recognize, with half my body wrapped in bandages.</p>
+<p>“Huh? I’m alive? How lucky must I be to survive an ambush like that. How long has it been?” I mutter under my breath.</p>
+<p>I force myself to stand up and check whether there’s anyone I could talk to about my situation. I go out of my room to see a that I’m in what seems to be a Sanctuary for warriors such as myself. I see someone standing near one of the pillars of the inn we were in, I’ll try asking him.</p>
+<p>“Hey, how did I end up here?” I ask the man in robes</p>
+<p>“Oh you’re finally awake. You washed up on the shores of this isle a couple weeks ago, may I ask for your name?” Says the man</p>
+<p>“The name’s Altrius Velad, Ali for short.”</p>
+<p>He scoffs then says, “Well nice to meet you ali, I’m Aristo, a vigil initiate of the <b>Isle of Vigils</b>.” He then asks, “Say, do you remember anything before you lost consciousness?”</p>
+<p>“I remember that I was on a ship with my crew, heading for an island before another ship shot us down.” I reply.</p>
+<p>“Do you remember your crew? Your crewmates? Or your captain” He asks again.</p>
+<p>“Now that you mention it, I don’t remember the name of our crew, any of my crewmates nor the name of my captain” I say as I try to remember something that seemed to be gone from my memories.</p>
+<p>“That’s a shame, well if you seek to find out more about your forgotten past, I suggest you regain your strength through training. The <b>Vigil Sentinels </b>would be more than happy to train you.”</p>
+<p>As much as I want to leave and explore the world to find out more of my past, I fear that I might be too weak for now. I should follow his advice and train before I set out for the sea</p>
+<p>“What’s the purpose for the <b>I</b><b>sle of Vigils</b>?” I ask reluctantly.</p>
+<p>“I guess I haven’t properly explained to you yet. The vigils are soldiers in training, soon to be positioned in the ranks of the <b>Etris </b>army, although some decide to stay instead of going to the army, so they become swordsmen of the isle, as we are also a separate force from the Etrean army. The main purpose of the isle is to be a sanctuary for initiates and vigil soldiers alike.” He explains.</p>
+<p>“Where should I go to start my training?” I ask</p>
+<p>“Well you can start by going to the temple sparring hall to train with the other initiates. After that you can go to the <b>Galemaster</b> to learn the art of <b>Galebreathing” </b>He replies with a generous smile on his face.</p>
+<p>“Thanks for everything, Aristo. I’ll get going now.” I say while shaking the man’s hand.</p>
+<p>“No problem, if you need anything you can come talk to me any time.”</p>
+<p>After an informative chat with Aristo, I should head to the sparring hall to start my training.</p>
+<p class="e">&nbsp;</p>
+<p>I enter a temple in the middle of the isle where the other vigil initiates were going. I assumed I was in the right direction and went inside. I then see multiple people sparring while a man in white watches over him, I decide to approach him to inquire about training.</p>
+<p>“Hey, is this where the vigils train? If it is, may I join them?” I ask the man</p>
+<p>“Oh you must be that <b>P</b><b>athfinder</b> the vigils found washed up on the shore. I’m the Instructor here, in charge of overseeing the initiate’s training. You may join them, go spar with Heathcliff over there, so I can see your current level of swordsmanship” He exclaims as he points to another initiate across the room.</p>
+<p>“Okay, will do Instructor.” I reply as I head towards Heathcliff.</p>
+<p>“Hey, you’re Heathcliff right? The instructor told me to spar with ya” I tell the initiate.</p>
+<p>“Huh? Oh you must be my new sparring partner. Haven’t seen yer face before, do tell, what’s yer name lad?” He asks with an arrogant tone to his voice</p>
+<p>“Name’s Ali, I just woke up from a coma not too long ago. A vigil directed me here.” I reply</p>
+<p>“Well Ali, lets see how ye fair up against me. Get a sword from the rack, put on yer protective gear and let’s dance” He says with the same arrogant yet confident tone in his voice.</p>
+<p>We then began sparring…</p>
+<p class="in"><i>*C</i><i>lank* *crash* *thud*</i></p>
+<p>These sounds of parrying and slashes echoed through the temple as we had nearly finished up our clash. Our broadswords collided in a bind after a furious flurry of strikes from Heathcliff.</p>
+<p>“Not bad eh? Yer defense is pretty good! You sure you don’t want to go on offense?” He screamed</p>
+<p>I scoff as I was merely sizing him up to see how he fights.</p>
+<p>	<i>*Crash*</i><i></i></p>
+<p>He then comes in even faster with more slashes, trying to overwhelm my guard. I parried and redirected each slash to the point that he’s completely wide open for a counter from my blade.</p>
+<p><i>	*Thud*</i></p>
+<p>Heathcliff then gets left on the ground after I thrusted my blade to his chest.</p>
+<p>“I win, Heathcliff. That was a nice spar.” I scoff</p>
+<p>He laughs then says “Not bad lad. That was a nice display of defense from ya”</p>
+<p>I help him get up from the ground and return the protective gear and swords to the racks. I should go back to the Instructor, to ask for his thoughts on that skirmish.</p>
+<p>“So Instructor- how did I fair?” I ask him with slight confidence in my voice.</p>
+<p>“Impressive Ali, I wasn’t expecting much from someone that just came from a coma. I shall set up training regiments for both you and Heathcliff to refine your skills.”</p>
+<p>“Alright, thank you Instructor.” I replied</p>
+<p>I went to Heathcliff to share the news and we both wait for the Instructor’s regiments.</p>
+<p>“Ah there you two are, here’s your training sheets, I’ve written down what you both should improve on and methods on how to improve them. You both are now training partners, I believe you two have some chemistry when it comes to your fighting styles, so you two could learn a lot from each other.” The Instructor explains.</p>
+<p>“Thank you, Instructor.” We both say while bowing towards the Instructor.</p>
+<p>We then took the training sheets and agreed to rest up for today and continue tomorrow.</p>
+<p class="c">*<i>One month later*</i></p>
+<p>Can’t believe it’s already been a whole month since I started training and living in this Isle. I’ve honed my skills and built strong relationships with my peers. Me and Heathcliff have already reached our goals in our training regiments and decide to part ways for now to learn different <b>attunements</b><b>.</b></p>
+<p>I return to Aristo to ask about the attunements.</p>
+<p>“Hey Aristo, its been a while.” I say to him with joy in my voice.</p>
+<p>“You caught me off guard there, Ali. I assume you’ve completed your training in the temple?” He asks</p>
+<p>“Yea I’ve already finished everything on my list. Anyway I came to ask about the <b>attunements</b>.”</p>
+<p>“Oh you want to attain one I presume? To put it bluntly, they are elemental powers that manipulate different parts of your surroundings and body to expel it’s specific effect. There’s four main attunements that one can attain. Flamecharm, the ability to ignite the ether in your body to shoot out flames. Galebreath, the power to control the air around you and the air inside your lungs.</p>
+<p>Frostdraw, the controlling of temperature by rapidly freezing the air around you. And lastly, Thundercall, it works by taking energy and turning it into electricity, it could be kinetic energy, energy from magnetic fields and other sources.</p>
+<p>That concludes the main four, there are more made by people, and some are even born with theirs. As I said last time, you can go to Galemaster Frisk if you wish to learn more about galebreath. She resides in a camp near the outskirts of the isle. You could also go to the city of etris to seek the Frostdraw master. For the other attunements you must seek the masters out for yourself.”</p>
+<p>As he explained everything I needed to know about attunements, I pulled out a notebook to write notes down so I can’t forget them.</p>
+<p>“Thanks Aristo, I’ll head out to study more about this world. Where do you think I should go after attaining an attunement?”</p>
+<p>He thinks for a moment, before answering: “Erisia, you should go to the island of erisia. Rumor has it that there's riches to be found on Erisia for adventuring types like yourself, although do be careful, there’s said to be monsters there. At least, I consider you to be an adventuring type given that you were washed up on a random shore. If you find anything of interest, the local <b>Antiquarian</b> might buy it off you. You'll be able to find Erisia by sailing out from the docks.”</p>
+<p>“Alright, thanks again Aristo, you’ve helped me a lot since I washed up on this Isle. I’ll come to visit from time to time to see what’s changed and what stayed the same around here.”</p>
+<p>I walk back to the Inn while waving to Aristo. I’ll start packing up and say my goodbyes to the vigils. It’s soothing to know that there’s still hope and kindness around this world. I think I’ll start my journey by going to the city of <b>Etris</b>, to learn more about the world and the people in it. Maybe I’ll attain frostdraw as my first attunement.</p>
+<p>I visited the temple one last time before heading out, to pay my respects to the Instructor and the other higher ups in the Vigils. I then head to the docks to ask a shipwright:</p>
+<p>“How much is it for a sloop? And do you know which direction to sail in to reach Etris?</p>
+<p>“A sloop’s 50 notes my friend. Etris is east from the isle, keep sailing In that direction and you should find a gate leading to the city. You can have this map to aid you in your treck.” He replies</p>
+<p>“Alright, I’ll take a sloop. And thanks for the directions.”</p>
+<p>As the shipwright sets up the sloop. I look at the map and mark the path I should sail.</p>
+<p>Finally, my actual journey begins here. I still don’t remember anything about my life before the ambush on my crew. Maybe I’ll find out soon if I ask locals about that attack, but that doesn’t matter at the moment. What matters is I get to Etris safe, get the information I need and head back out towards Erisia, an island said to be full of riches and eerie danger. I’ll take the risk so I can become stronger and wiser in this forsaken world..</p>`},
+  {n:2,title:'Chasing a Forgotten Memory',text:placeholder(2)},
+  {n:3,title:'New Journey',text:placeholder(3)},
+  {n:4,title:'Below The Sea, Layer 1: Thalassophobia',text:placeholder(4)},
+  {n:5,title:'Even Deeper, Layer 2: The Ethereal Chill',text:placeholder(5)}
+];
+/* ============ END OF NOVEL ============ */
+
+(function(){
+  var body=document.body, menu=document.getElementById('menu'), reader=document.getElementById('reader');
+  var BOOK='Origins of a Lone Warrior', open=false, idx=0, links=[];
+  var still=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  CHAPTERS.forEach(function(c){
+    var li=document.createElement('li'), a=document.createElement('a');
+    a.href='#chapter-'+c.n; a.textContent='Chapter '+c.n+': '+c.title;
+    li.appendChild(a); menu.appendChild(li); links.push(a);
+  });
+  links.forEach(function(a,i){
+    a.addEventListener('mouseenter',function(){setOn(i)});
+    a.addEventListener('focus',function(){setOn(i)});
+  });
+
+  function setOn(i){
+    idx=(i+links.length)%links.length;
+    links.forEach(function(a,n){a.classList.toggle('on',n===idx)});
+  }
+  function openMenu(){ if(open) return; open=true; body.classList.add('menu-open'); }
+
+  function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+  function fmt(s){return esc(s).replace(/\*\*([^*\n]+)\*\*/g,'<strong>$1</strong>').replace(/\*([^*\n]+)\*/g,'<em>$1</em>').replace(/\n/g,' ')}
+  function render(text){
+    return text.split(/\n\s*\n/).map(function(p){
+      p=p.trim(); if(!p) return '';
+      if(/^(\*\s*\*\s*\*|---)$/.test(p)) return '<div class="brk" aria-hidden="true">* * *</div>';
+      return '<p>'+fmt(p)+'</p>';
+    }).join('');
+  }
+
+  var current=-1;
+  function show(i){
+    var c=CHAPTERS[i], prev=CHAPTERS[i-1], next=CHAPTERS[i+1];
+    current=i; body.classList.add('reading');
+    document.getElementById('cnum').textContent='Chapter '+c.n;
+    document.getElementById('ctitle').textContent=c.title;
+    document.getElementById('prose').innerHTML=c.html||render(c.text);
+    var pg='';
+    if(prev) pg+='<a class="prev" href="#chapter-'+prev.n+'"><small>Previous chapter</small>Chapter '+prev.n+': '+esc(prev.title)+'</a>';
+    if(next) pg+='<a class="next" href="#chapter-'+next.n+'"><small>Next chapter</small>Chapter '+next.n+': '+esc(next.title)+'</a>';
+    document.getElementById('pager').innerHTML=pg;
+    document.title='Chapter '+c.n+': '+c.title+' | '+BOOK;
+    reader.scrollTop=0; reader.focus({preventScroll:true});
+  }
+  function home(){
+    var was=body.classList.contains('reading');
+    body.classList.remove('reading'); current=-1; document.title=BOOK;
+    if(was) openMenu();
+  }
+  function route(){
+    var m=/^#chapter-(\d+)$/.exec(location.hash), i=-1;
+    if(m) CHAPTERS.forEach(function(c,n){ if(String(c.n)===m[1]) i=n; });
+    if(i>=0) show(i); else home();
+  }
+  window.addEventListener('hashchange',route);
+
+  document.addEventListener('keydown',function(e){
+    if(e.metaKey||e.ctrlKey||e.altKey) return;
+    if(current>=0){
+      if(e.key==='Escape') location.hash='#chapters';
+      else if(e.key==='ArrowLeft'&&CHAPTERS[current-1]) location.hash='#chapter-'+CHAPTERS[current-1].n;
+      else if(e.key==='ArrowRight'&&CHAPTERS[current+1]) location.hash='#chapter-'+CHAPTERS[current+1].n;
+      return;
+    }
+    if(!open){ if(e.key==='Shift'||e.key==='Tab') return; e.preventDefault(); openMenu(); return; }
+    if(e.key==='ArrowDown'){e.preventDefault(); setOn(idx+1); links[idx].focus({preventScroll:true});}
+    else if(e.key==='ArrowUp'){e.preventDefault(); setOn(idx-1); links[idx].focus({preventScroll:true});}
+    else if(e.key==='Enter'&&document.activeElement!==links[idx]){e.preventDefault(); location.hash=links[idx].getAttribute('href');}
+  });
+  document.getElementById('stage').addEventListener('click',openMenu);
+
+  route();
+
+  /* Drifting dust */
+  var cv=document.getElementById('dust'), cx=cv.getContext('2d'), P=[], W=0, H=0;
+  function size(){
+    var d=window.devicePixelRatio||1; W=cv.clientWidth; H=cv.clientHeight;
+    cv.width=W*d; cv.height=H*d; cx.setTransform(d,0,0,d,0,0);
+  }
+  function seed(){
+    P=[]; var n=Math.round(Math.min(70,W*H/16000));
+    for(var i=0;i<n;i++) P.push({x:Math.random()*W,y:Math.random()*H,r:.5+Math.random()*1.4,
+      vx:(Math.random()-.5)*.12,vy:-.03-Math.random()*.12,a:.04+Math.random()*.2,t:Math.random()*6.28});
+  }
+  function draw(){
+    cx.clearRect(0,0,W,H);
+    for(var i=0;i<P.length;i++){
+      var p=P[i];
+      if(!still){p.x+=p.vx; p.y+=p.vy; p.t+=.012;
+        if(p.y<-4)p.y=H+4; if(p.x<-4)p.x=W+4; if(p.x>W+4)p.x=-4;}
+      cx.globalAlpha=p.a*(0.6+0.4*Math.sin(p.t));
+      cx.fillStyle='#D8DFD8';
+      cx.beginPath(); cx.arc(p.x,p.y,p.r,0,6.283); cx.fill();
+    }
+    if(!still) requestAnimationFrame(draw);
+  }
+  size(); seed(); draw();
+  window.addEventListener('resize',function(){size(); seed(); if(still) draw();});
+})();
+</script>
+</body>
+</html>
